@@ -127,7 +127,6 @@ var Generator = (function () {
 
         _.forEach(swagger.paths, function (api, path) {
             var globalParams = [];
-            debugger;
             _.forEach(api, function (op, m) {
                 if (m.toLowerCase() === 'parameters') {
                     globalParams = op;
