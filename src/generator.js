@@ -119,15 +119,14 @@ var Generator = (function () {
             description: swagger.info.description,
             isSecure: swagger.securityDefinitions !== undefined,
             swagger: swagger,
-            domain: (swagger.schemes && swagger.schemes.length > 0 ? swagger.schemes[0] : 'http') + '://' + 
-                (swagger.host ? swagger.host : 'localhost') + ('/' === swagger.basePath ? '' : swagger.basePath),
+            domain: (swagger.schemes && swagger.schemes.length > 0 ? swagger.schemes[0] : 'http') + '://' +
+            (swagger.host ? swagger.host : 'localhost') + ('/' === swagger.basePath ? '' : swagger.basePath),
             methods: [],
             definitions: []
         };
 
         _.forEach(swagger.paths, function (api, path) {
             var globalParams = [];
-            debugger;
             _.forEach(api, function (op, m) {
                 if (m.toLowerCase() === 'parameters') {
                     globalParams = op;
@@ -182,6 +181,10 @@ var Generator = (function () {
                         parameter.type = that.camelCase(that.getRefType(parameter.schema.$ref));
                     }
 
+                    if (_.has(parameter, 'schema') && _.isString(parameter.schema.type)) {
+                        parameter.type = that.camelCase((parameter.schema.type));
+                    }
+
                     parameter.camelCaseName = that.camelCase(parameter.name);
 
                     // lets also check for a bunch of Java objects!
@@ -194,7 +197,7 @@ var Generator = (function () {
                     } else if (parameter.type === 'object') {
                         parameter.typescriptType = 'any';
                     } else if (parameter.type === 'array') {
-                        parameter.typescriptType = that.camelCase(parameter.items['type']) +'[]';
+                        parameter.typescriptType = that.camelCase(parameter.items['type']) + '[]';
                         parameter.isArray = true;
                     } else {
                         parameter.typescriptType = that.camelCase(parameter.type);
@@ -235,7 +238,7 @@ var Generator = (function () {
                         if (responseSchema['type'] === 'array') {
                             var items = responseSchema.items;
                             if (_.has(items, '$ref')) {
-                              method.response = that.camelCase(items['$ref'].replace('#/definitions/', '')) + '[]';
+                                method.response = that.camelCase(items['$ref'].replace('#/definitions/', '')) + '[]';
                             } else {
                                 method.response = that.camelCase(items['type']) + '[]';
                             }
@@ -266,7 +269,7 @@ var Generator = (function () {
             };
 
             // lower keyword to templates
-            definition.lower = function() {
+            definition.lower = function () {
                 return function (text, render) {
                     return render(text).toLowerCase();
                 }
