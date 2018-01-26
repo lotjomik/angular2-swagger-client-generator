@@ -2,6 +2,14 @@
 import { {{.}} } from './{{#lower}}{{.}}{{/lower}}.model';
 {{/imports}}
 
+{{#enums}}
+export enum {{name}} {
+  {{#values}}
+  {{#upper}}{{value}}{{/upper}} = '{{value}}'{{^isLast}},{{/isLast}}
+  {{/values}}
+}
+
+{{/enums}}
 export interface {{&name}} {
 {{#properties}}
   {{#isArray}}

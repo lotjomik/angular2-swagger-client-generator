@@ -5,8 +5,9 @@ node_modules
 .vscode
 .idea
 bin
+lib
 obj
+out
 output
 temp
-lib
 npm-debug.log

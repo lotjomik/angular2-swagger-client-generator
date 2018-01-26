@@ -285,7 +285,7 @@ var Generator = (function () {
                     typescriptType: null
                 };
 
-                if (property.isArray)
+                if (property.isArray) {
                     if (_.has(propin.items, '$ref')) {
                         property.type = that.camelCase(propin.items['$ref'].replace('#/definitions/', ''));
                     } else if (_.has(propin.items, 'type')) {
@@ -293,7 +293,7 @@ var Generator = (function () {
                     } else {
                         property.type = propin.type;
                     }
-
+                }
                 else {
                     property.type = _.has(propin, '$ref') ? that.camelCase(propin['$ref'].replace('#/definitions/', '')) : propin.type;
                 }
@@ -305,7 +305,6 @@ var Generator = (function () {
                 } else {
                     property.typescriptType = property.type;
                 }
-
 
                 if (property.isRef) {
                     definition.refs.push(property);

@@ -1,13 +1,21 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 import {
-{{#definitions}}  {{name}}{{^last}},
-{{/last}}{{/definitions}}
+{{#definitions}} {{name}}{{^isLast}},
+{{/isLast}}{{/definitions}}
 
 } from './models';
 
+{{#enums}}
+export enum {{name}} {
+  {{#values}}
+  {{#upper}}{{value}}{{/upper}} = '{{value}}'{{^isLast}},{{/isLast}}
+  {{/values}}
+}
+
+{{/enums}}
 /**
 * Created with angular4-swagger-client-generator.
 */
@@ -33,7 +41,7 @@ export class ApiClientService {
   {{/parameters}}
   * @return Full HTTP response as Observable
   */
-  public {{&methodName}}({{#parameters}}{{&camelCaseName}}: {{typescriptType}}{{^last}}, {{/last}}{{/parameters}}): Observable<HttpResponse<{{&response}}>> {
+  public {{&methodName}}({{#parameters}}{{&camelCaseName}}: {{typescriptType}}{{^isLast}}, {{/isLast}}{{/parameters}}): Observable<HttpResponse<{{&response}}>> {
     let uri = `{{&backTickPath}}`;
     let headers = new HttpHeaders();
     let params = new HttpParams();
