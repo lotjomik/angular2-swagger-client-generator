@@ -3,9 +3,14 @@ import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/comm
 import { Observable } from 'rxjs';
 
 import {
-{{#definitions}} {{name}}{{^isLast}},
-{{/isLast}}{{/definitions}}
-
+{{#definitions}}
+{{#hasEnums}}
+{{#enums}}
+  {{name}},
+{{/enums}}
+{{/hasEnums}}
+  {{name}}{{^isLast}},{{/isLast}}
+{{/definitions}}
 } from './models';
 
 {{#enums}}

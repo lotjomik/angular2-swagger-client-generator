@@ -1,3 +1,13 @@
 {{#definitions}}
+{{#hasEnums}}
+export {
+{{#enums}}
+  {{name}},
+{{/enums}}
+  {{name}}
+} from './models/{{#lower}}{{name}}{{/lower}}.model';
+{{/hasEnums}}
+{{^hasEnums}}
 export { {{name}} } from './models/{{#lower}}{{name}}{{/lower}}.model';
+{{/hasEnums}}
 {{/definitions}}
