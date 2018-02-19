@@ -302,6 +302,55 @@ var Generator = (function () {
                 else
                     definition.properties.push(property);
             });
+	    
+	    _.forEach(defin.allOf, function (oneOf, ofVal) {
+		    _.forEach(oneOf.properties, function (propin, propVal) {
+
+			var property = {
+			    name: propVal,
+			    isRef: _.has(propin, '$ref') || (propin.type === 'array' && _.has(propin.items, '$ref')),
+			    isArray: propin.type === 'array',
+			    type: null,
+			    typescriptType: null
+			};
+
+			if (property.isArray)
+			    if(_.has(propin.items, '$ref')){
+				property.type = that.camelCase(propin.items["$ref"].replace("#/definitions/", ""));
+			    }else if(_.has(propin.items, 'type')) {
+				property.type = that.camelCase(propin.items["type"]);
+			    }else{
+				property.type = propin.type;
+			    }
+
+			else
+			    property.type = _.has(propin, '$ref') ? that.camelCase(propin["$ref"].replace("#/definitions/", "")) : propin.type;
+
+			if (property.type === 'integer' || property.type === 'double')
+			    property.typescriptType = 'number';
+			else if (property.type === 'object')
+			    property.typescriptType = 'any';
+			else
+			    property.typescriptType = property.type;
+
+
+			if (property.isRef){
+			    definition.refs.push(property);
+
+			    // Don't duplicate import statements
+			    var addImport = true;
+			    for(var i=0;i<definition.imports.length;i++){
+				if(definition.imports[i] === property.type){
+				    addImport = false;
+				}
+			    }
+			    if(addImport)
+				definition.imports.push(property.type);
+			}
+			else
+			    definition.properties.push(property);
+		    });
+	    });
 
             data.definitions.push(definition);
         });
