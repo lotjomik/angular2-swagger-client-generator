@@ -47,9 +47,19 @@ export class ApiClientService {
   * @return Full HTTP response as Observable
   */
   public {{&methodName}}({{#parameters}}{{&camelCaseName}}: {{typescriptType}}{{^isLast}}, {{/isLast}}{{/parameters}}): Observable<HttpResponse<{{&response}}>> {
-    let uri = `{{&backTickPath}}`;
+    const uri = `{{&backTickPath}}`;
+    {{#hasHeaderParameters}}
     let headers = new HttpHeaders();
+    {{/hasHeaderParameters}}
+    {{^hasHeaderParameters}}
+    const headers = new HttpHeaders();
+    {{/hasHeaderParameters}}
+    {{#hasQueryParameters}}
     let params = new HttpParams();
+    {{/hasQueryParameters}}
+    {{^hasQueryParameters}}
+    const params = new HttpParams();
+    {{/hasQueryParameters}}
     {{#parameters}}
       {{#isQueryParameter}}
         {{#isSingleton}}

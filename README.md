@@ -31,7 +31,7 @@ or
 a4apigen -u [url/of/your/swagger.json]
 ```
 
-## Example usage:
+## Example usage
 
 This command will generate API client described in swagger.json file to ./out folder
 ```
@@ -48,6 +48,10 @@ node ./src/a4apigen -s ./tests/apis/swagger.json -o ./out
 ```
 npm run clean
 ```
+
+## Known issues
+
+- Enums are generated incorrectly if an enum with a same name is used within several data types. One wworkaround is to use different local enum names (if the Swagger JSON can be changed).
 
 ## Note:
 This project was inspired by [swagger-js-codegen](https://github.com/wcandillon/swagger-js-codegen) project.

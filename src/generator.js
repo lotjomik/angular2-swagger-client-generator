@@ -73,7 +73,7 @@ var Generator = (function () {
             fs.mkdirSync(outputdir);
         }
 
-        // generate API models				
+        // generate API models
 
         _.forEach(this.viewModel.definitions, function (definition) {
             that.LogMessage('Rendering template for model ', definition.name);
@@ -120,13 +120,15 @@ var Generator = (function () {
             isSecure: swagger.securityDefinitions !== undefined,
             swagger: swagger,
             domain: (swagger.schemes && swagger.schemes.length > 0 ? swagger.schemes[0] : 'http') + '://' +
-            (swagger.host ? swagger.host : 'localhost') + ('/' === swagger.basePath ? '' : swagger.basePath),
+                (swagger.host ? swagger.host : 'localhost') + ('/' === swagger.basePath ? '' : swagger.basePath),
             methods: [],
+            enums: [],
             definitions: []
         };
 
         _.forEach(swagger.paths, function (api, path) {
             var globalParams = [];
+            debugger;
             _.forEach(api, function (op, m) {
                 if (m.toLowerCase() === 'parameters') {
                     globalParams = op;
@@ -181,10 +183,6 @@ var Generator = (function () {
                         parameter.type = that.camelCase(that.getRefType(parameter.schema.$ref));
                     }
 
-                    if (_.has(parameter, 'schema') && _.isString(parameter.schema.type)) {
-                        parameter.type = that.camelCase((parameter.schema.type));
-                    }
-
                     parameter.camelCaseName = that.camelCase(parameter.name);
 
                     // lets also check for a bunch of Java objects!
@@ -197,15 +195,44 @@ var Generator = (function () {
                     } else if (parameter.type === 'object') {
                         parameter.typescriptType = 'any';
                     } else if (parameter.type === 'array') {
-                        parameter.typescriptType = that.camelCase(parameter.items['type']) + '[]';
-                        parameter.isArray = true;
+                        parameter.typescriptType = that.camelCase(parameter.items['type']) +'[]';
                     } else {
                         parameter.typescriptType = that.camelCase(parameter.type);
                     }
 
-                    if (parameter.enum && parameter.enum.length === 1) {
-                        parameter.isSingleton = true;
-                        parameter.singleton = parameter.enum[0];
+                    if (parameter.enum) {
+                        if (parameter.enum.length === 1) {
+                            parameter.isSingleton = true;
+                            parameter.singleton = parameter.enum[0];
+                        } else if (parameter.type === 'string') {
+                            var enumeration = {
+                                name: null,
+                                values: []
+                            }
+
+                            // upper keyword to templates
+                            enumeration.upper = function() {
+                                return function (text, render) {
+                                    return render(text).toUpperCase();
+                                }
+                            };
+
+                            enumeration.name = parameter.name[0].toUpperCase() + parameter.name.substring(1);
+                            var addEnum = true;
+                            for (var i = 0; i < data.enums.length; i++) {
+                                if (data.enums[i].name === enumeration.name) {
+                                    addEnum = false;
+                                }
+                            }
+                            if (addEnum) {
+                                for (var i = 0; i < parameter.enum.length; i++) {
+                                    var value = {value: parameter.enum[i], isLast: i === parameter.enum.length - 1};
+                                    enumeration.values.push(value);
+                                }
+                                data.enums.push(enumeration);
+                            }
+                            parameter.typescriptType = enumeration.name;
+                        }
                     }
 
                     if (parameter.in === 'body') {
@@ -228,7 +255,7 @@ var Generator = (function () {
                 });
 
                 if (method.parameters.length > 0) {
-                    method.parameters[method.parameters.length - 1].last = true;
+                    method.parameters[method.parameters.length - 1].isLast = true;
                 }
 
                 if (op.responses['200'] != undefined) {
@@ -238,7 +265,7 @@ var Generator = (function () {
                         if (responseSchema['type'] === 'array') {
                             var items = responseSchema.items;
                             if (_.has(items, '$ref')) {
-                                method.response = that.camelCase(items['$ref'].replace('#/definitions/', '')) + '[]';
+                              method.response = that.camelCase(items['$ref'].replace('#/definitions/', '')) + '[]';
                             } else {
                                 method.response = that.camelCase(items['type']) + '[]';
                             }
@@ -263,26 +290,41 @@ var Generator = (function () {
 
             var definition = {
                 name: defName,
+                isLast: false,
+                hasEnums: false,
+                enums: [],
                 properties: [],
                 refs: [],
                 imports: []
             };
 
             // lower keyword to templates
-            definition.lower = function () {
+            definition.lower = function() {
                 return function (text, render) {
                     return render(text).toLowerCase();
                 }
             };
 
             _.forEach(defin.properties, function (propin, propVal) {
-
                 var property = {
                     name: propVal,
                     isRef: _.has(propin, '$ref') || (propin.type === 'array' && _.has(propin.items, '$ref')),
                     isArray: propin.type === 'array',
+                    isEnum: propin.enum,
                     type: null,
                     typescriptType: null
+                };
+
+                var enumeration = {
+                    name: null,
+                    values: []
+                };
+
+                // upper keyword to templates
+                enumeration.upper = function() {
+                    return function (text, render) {
+                        return render(text).toUpperCase();
+                    }
                 };
 
                 if (property.isArray) {
@@ -292,6 +334,24 @@ var Generator = (function () {
                         property.type = that.camelCase(propin.items['type']);
                     } else {
                         property.type = propin.type;
+                    }
+                } else if (property.isEnum) {
+                    property.type = property.name[0].toUpperCase() + property.name.substring(1);
+                    enumeration.name = property.type;
+                    for (var i = 0; i < propin.enum.length; i++) {
+                        var value = {value: propin.enum[i], isLast: i === propin.enum.length - 1};
+                        enumeration.values.push(value);
+                    }
+                    definition.enums.push(enumeration);
+                    definition.hasEnums = true;
+
+                    if (data.enums.length > 0) {
+                        for (var i = 0; i < data.enums.length; i++) {
+                            if (data.enums[i].name === enumeration.name) {
+                                data.enums.splice(i, 1);
+                                break;
+                            }
+                        }
                     }
                 }
                 else {
@@ -324,61 +384,94 @@ var Generator = (function () {
                     definition.properties.push(property);
                 }
             });
-	    
-	    _.forEach(defin.allOf, function (oneOf, ofVal) {
-		    _.forEach(oneOf.properties, function (propin, propVal) {
 
-			var property = {
-			    name: propVal,
-			    isRef: _.has(propin, '$ref') || (propin.type === 'array' && _.has(propin.items, '$ref')),
-			    isArray: propin.type === 'array',
-			    type: null,
-			    typescriptType: null
-			};
+            _.forEach(defin.allOf, function (oneOf, ofVal) {
+                _.forEach(oneOf.properties, function (propin, propVal) {
+                    var property = {
+                        name: propVal,
+                        isRef: _.has(propin, '$ref') || (propin.type === 'array' && _.has(propin.items, '$ref')),
+                        isArray: propin.type === 'array',
+                        isEnum: propin.enum,
+                        type: null,
+                        typescriptType: null
+                    };
 
-			if (property.isArray)
-			    if(_.has(propin.items, '$ref')){
-				property.type = that.camelCase(propin.items["$ref"].replace("#/definitions/", ""));
-			    }else if(_.has(propin.items, 'type')) {
-				property.type = that.camelCase(propin.items["type"]);
-			    }else{
-				property.type = propin.type;
-			    }
+                    var enumeration = {
+                        name: null,
+                        values: []
+                    };
 
-			else
-			    property.type = _.has(propin, '$ref') ? that.camelCase(propin["$ref"].replace("#/definitions/", "")) : propin.type;
+                    // upper keyword to templates
+                    enumeration.upper = function() {
+                        return function (text, render) {
+                            return render(text).toUpperCase();
+                        }
+                    };
 
-			if (property.type === 'integer' || property.type === 'double')
-			    property.typescriptType = 'number';
-			else if (property.type === 'object')
-			    property.typescriptType = 'any';
-			else
-			    property.typescriptType = property.type;
+                    if (property.isArray) {
+                        if (_.has(propin.items, '$ref')) {
+                            property.type = that.camelCase(propin.items['$ref'].replace('#/definitions/', ''));
+                        } else if (_.has(propin.items, 'type')) {
+                            property.type = that.camelCase(propin.items['type']);
+                        } else {
+                            property.type = propin.type;
+                        }
+                    } else if (property.isEnum) {
+                        property.type = property.name[0].toUpperCase() + property.name.substring(1);
+                        enumeration.name = property.type;
+                        for (var i = 0; i < propin.enum.length; i++) {
+                            var value = {value: propin.enum[i], isLast: i === propin.enum.length - 1};
+                            enumeration.values.push(value);
+                        }
+                        definition.enums.push(enumeration);
+                        definition.hasEnums = true;
 
+                        if (data.enums.length > 0) {
+                            for (var i = 0; i < data.enums.length; i++) {
+                                if (data.enums[i].name === enumeration.name) {
+                                    data.enums.splice(i, 1);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        property.type = _.has(propin, '$ref') ? that.camelCase(propin['$ref'].replace('#/definitions/', '')) : propin.type;
+                    }
 
-			if (property.isRef){
-			    definition.refs.push(property);
+                    if (property.type === 'integer' || property.type === 'double') {
+                        property.typescriptType = 'number';
+                    } else if (property.type === 'object') {
+                        property.typescriptType = 'any';
+                    } else {
+                        property.typescriptType = property.type;
+                    }
 
-			    // Don't duplicate import statements
-			    var addImport = true;
-			    for(var i=0;i<definition.imports.length;i++){
-				if(definition.imports[i] === property.type){
-				    addImport = false;
-				}
-			    }
-			    if(addImport)
-				definition.imports.push(property.type);
-			}
-			else
-			    definition.properties.push(property);
-		    });
-	    });
+                    if (property.isRef) {
+                        definition.refs.push(property);
+
+                        // Don't duplicate import statements
+                        var addImport = true;
+                        for (var i = 0; i < definition.imports.length; i++) {
+                            if (definition.imports[i] === property.type) {
+                                addImport = false;
+                            }
+                        }
+                        if (addImport) {
+                            definition.imports.push(property.type);
+                        }
+                    }
+                    else {
+                        definition.properties.push(property);
+                    }
+                });
+            });
 
             data.definitions.push(definition);
         });
 
         if (data.definitions.length > 0) {
-            data.definitions[data.definitions.length - 1].last = true;
+            data.definitions[data.definitions.length - 1].isLast = true;
         }
 
         return data;
@@ -415,7 +508,6 @@ var Generator = (function () {
 
         return m.toLowerCase() + result[0].toUpperCase() + result.substring(1);
     };
-
 
     Generator.prototype.camelCase = function (text) {
         if (!text) {
