@@ -1,7 +1,7 @@
 {
   "name": "angular4-swagger-client-generator",
-  "version": "0.1.15",
-  "description": "Angular 4/5 REST API client generator from Swagger JSON with camel case settings",
+  "version": "0.1.16",
+  "description": "Angular 4/5/6 REST API client generator from Swagger JSON with camel case settings",
   "homepage": "https://github.com/lotjomik/angular4-swagger-client-generator",
   "main": "index.js",
   "bin": {
@@ -21,29 +21,29 @@
   "keywords": [
     "swagger",
     "rest",
-    "angular4",
-    "angular5",
-    "angular",
-    "scaffolding",
-    "webapi",
     "api",
     "generator",
-    "camel"
+    "angular",
+    "angular2",
+    "angular4",
+    "angular5",
+    "angular6",
+    "scaffolding"
   ],
   "license": "Apache-2.0",
   "scripts": {
     "a4apigen": "a4apigen -s swagger.json",
-    "build": "gulp"
+    "build": "copyfiles ./src/*.js bin && copyfiles ./src/generator.js lib",
+    "clean": "rimraf bin lib out"
   },
   "dependencies": {
-    "gulp": "^3.9.1",
-    "js-beautify": "^1.6.14",
-    "lodash": "^4.17.4",
+    "copyfiles": "^2.0.0",
+    "js-beautify": "^1.7.5",
+    "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
     "mustache": "^2.3.0",
     "optimist": "^0.6.1",
-    "request": "^2.81.0",
-    "tslint": "^5.7.0",
-    "typescript": "^2.4.0"
+    "request": "^2.86.0",
+    "rimraf": "^2.6.2"
   }
 }

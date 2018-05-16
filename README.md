@@ -43,5 +43,11 @@ or from repository directory run:
 node ./src/a4apigen -s ./tests/apis/swagger.json -o ./out
 ```
 
+## Clean up
+
+```
+npm run clean
+```
+
 ## Note:
 This project was inspired by [swagger-js-codegen](https://github.com/wcandillon/swagger-js-codegen) project.
