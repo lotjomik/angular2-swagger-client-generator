@@ -158,6 +158,8 @@ var Generator = (function () {
                     summaryLines: summaryLines,
                     isSecure: swagger.security !== undefined || op.security !== undefined,
                     parameters: [],
+                    hasQueryParameters: false,
+                    hasHeaderParameters: false,
                     hasJsonResponse: _.some(_.defaults([], swagger.produces, op.produces), function (response) { // TODO PREROBIT
                         return response.indexOf('/json') != -1;
                     })
@@ -245,8 +247,10 @@ var Generator = (function () {
                         if (parameter['x-name-pattern']) {
                             parameter.isPatternType = true;
                         }
+                        method.hasQueryParameters = true;
                     } else if (parameter.in === 'header') {
                         parameter.isHeaderParameter = true;
+                        method.hasHeaderParameters = true;
                     } else if (parameter.in === 'formData') {
                         parameter.isFormParameter = true;
                     }
