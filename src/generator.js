@@ -181,25 +181,30 @@ var Generator = (function () {
                         return;
                     }
 
-                    if (_.has(parameter, 'schema') && _.isString(parameter.schema.$ref)) {
-                        parameter.type = that.camelCase(that.getRefType(parameter.schema.$ref));
-                    }
-
                     parameter.camelCaseName = that.camelCase(parameter.name);
 
-                    // lets also check for a bunch of Java objects!
-                    if (parameter.type === 'integer' || parameter.type === 'double' || parameter.type == 'Integer') {
-                        parameter.typescriptType = 'number';
-                    } else if (parameter.type == 'String') {
-                        parameter.typescriptType = 'string';
-                    } else if (parameter.type == 'Boolean') {
-                        parameter.typescriptType = 'boolean';
-                    } else if (parameter.type === 'object') {
-                        parameter.typescriptType = 'any';
-                    } else if (parameter.type === 'array') {
-                        parameter.typescriptType = that.camelCase(parameter.items['type']) +'[]';
+                    if (_.has(parameter, 'schema')) {
+                        if (_.isString(parameter.schema.$ref)) {
+                            parameter.type = that.camelCase(that.getRefType(parameter.schema.$ref));
+                        } else if (_.has(parameter.schema, 'type')) {
+                            parameter.type = parameter.schema.type;
+
+                            if (_.has(parameter.schema, 'items')) {
+                                parameter.items = parameter.schema.items;
+                            }
+                        }
+                    }
+
+                    if (parameter.type === 'array' && _.has(parameter, 'items')) {
+                        if (_.has(parameter.items, '$ref')) {
+                            parameter.typescriptType = that.getRefType(parameter.items.$ref) + '[]';
+                        } else if (_.has(parameter.items, 'type')) {
+                            parameter.typescriptType = that.getTypescriptType(parameter.items.type) + '[]';
+                        } else {
+                            parameter.typescriptType = that.getTypescriptType(parameter.type);
+                        }
                     } else {
-                        parameter.typescriptType = that.camelCase(parameter.type);
+                        parameter.typescriptType = that.getTypescriptType(parameter.type);
                     }
 
                     if (parameter.enum) {
@@ -479,6 +484,28 @@ var Generator = (function () {
         }
 
         return data;
+    };
+
+    Generator.prototype.getTypescriptType = function(type) {
+        if (!type) {
+            return 'any';
+        }
+
+        switch (type.toLowerCase()) {
+            case 'integer':
+            case 'double':
+                return 'number';
+            case 'string':
+                return 'string';
+            case 'boolean':
+                return 'boolean';
+            case 'object':
+                return 'any';
+            case 'array':
+                return 'any[]';
+        }
+
+        return this.camelCase(type);
     };
 
     Generator.prototype.getRefType = function (refString) {
