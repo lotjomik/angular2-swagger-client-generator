@@ -112,10 +112,14 @@ export class ApiClientService {
   private sendRequest<T>(method: string, uri: string, headers: HttpHeaders, params: HttpParams, body: any): Observable<HttpResponse<T>> {
     if (method === 'get') {
       return this.http.get<T>(this.domain + uri, { headers: headers.set('Accept', 'application/json'), params: params, observe: 'response' });
+    } else if (method === 'options') {
+      return this.http.options<T>(this.domain + uri, { headers: headers.set('Accept', 'application/json'), params: params, observe: 'response' });
     } else if (method === 'put') {
       return this.http.put<T>(this.domain + uri, body, { headers: headers.set('Content-Type', 'application/json'), params: params, observe: 'response' });
     } else if (method === 'post') {
       return this.http.post<T>(this.domain + uri, body, { headers: headers.set('Content-Type', 'application/json'), params: params, observe: 'response' });
+    } else if (method === 'patch') {
+      return this.http.patch<T>(this.domain + uri, body, { headers: headers.set('Content-Type', 'application/json'), params: params, observe: 'response' });
     } else if (method === 'delete') {
       return this.http.delete<T>(this.domain + uri, { headers: headers, params: params, observe: 'response' });
     } else {
