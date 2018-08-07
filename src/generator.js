@@ -198,6 +198,7 @@ var Generator = (function () {
                         parameter.typescriptType = 'any';
                     } else if (parameter.type === 'array') {
                         parameter.typescriptType = that.camelCase(parameter.items['type']) +'[]';
+                        parameter.isArray = true;
                     } else {
                         parameter.typescriptType = that.camelCase(parameter.type);
                     }

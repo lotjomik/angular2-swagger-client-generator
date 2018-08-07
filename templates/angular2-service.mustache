@@ -76,8 +76,12 @@ export class ApiClientService {
           {{^isPatternType}}
     if ({{&camelCaseName}} !== undefined && {{&camelCaseName}} !== null) {
           {{#isArray}}
-      Object.keys({{&camelCaseName}}).map(value => {
-        params = params.set('{{&name}}', value + '');
+      {{&camelCaseName}}.forEach((value, index) => {
+        if (index === 0) {
+          params = params.set('{{&name}}', value[index] + '');
+        } else {
+          params = params.append('{{&name}}', value[index] + '');
+        }
       });
           {{/isArray}}
           {{^isArray}}
