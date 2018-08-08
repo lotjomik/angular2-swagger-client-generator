@@ -78,9 +78,9 @@ export class ApiClientService {
           {{#isArray}}
       {{&camelCaseName}}.forEach((value, index) => {
         if (index === 0) {
-          params = params.set('{{&name}}', value[index] + '');
+          params = params.set('{{&name}}', value + '');
         } else {
-          params = params.append('{{&name}}', value[index] + '');
+          params = params.append('{{&name}}', value + '');
         }
       });
           {{/isArray}}

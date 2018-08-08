@@ -59,15 +59,23 @@ if (fromUrl) {
     var dest = path.join(outputdir, "swagger.json");
 
     request.get(argv.url, function (error, response, body) {
+        // Download failure, try to read local swagger.json
         if (error || response.statusCode != 200) {
-            console.log(error);
-            process.exit(1);
+            if (fs.existsSync(dest)) {
+                var g = new genRef.Generator(dest, outputdir);
+                g.Debug = true;
+                g.generateAPIClient();
+            }
+            else {
+                console.log(error);
+            }
         }
-
-        fs.writeFileSync(dest, body, 'utf-8');
-        var g = new genRef.Generator(dest, outputdir);
-        g.Debug = true;
-        g.generateAPIClient();
+        else {
+            fs.writeFileSync(dest, body, 'utf-8');
+            var g = new genRef.Generator(dest, outputdir);
+            g.Debug = true;
+            g.generateAPIClient();
+        }
     });
 }
 else {
