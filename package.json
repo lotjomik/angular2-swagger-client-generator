@@ -1,6 +1,6 @@
 {
   "name": "angular4-swagger-client-generator",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "description": "Angular 4/5/6 REST API client generator from Swagger JSON with camel case settings",
   "homepage": "https://github.com/lotjomik/angular4-swagger-client-generator",
   "main": "index.js",
