@@ -76,7 +76,7 @@ var Generator = (function () {
         // generate API models
 
         _.forEach(this.viewModel.definitions, function (definition) {
-            that.LogMessage('Rendering template for model ', definition.name);
+            that.LogMessage('Rendering template for model', definition.name);
             var result = that.renderLintAndBeautify(that.templates.model, definition, that.templates);
 
             var outfile = outputdir + '/' + definition.name.toLowerCase() + '.model.ts';
@@ -188,16 +188,16 @@ var Generator = (function () {
                     parameter.camelCaseName = that.camelCase(parameter.name);
 
                     // lets also check for a bunch of Java objects!
-                    if (parameter.type === 'integer' || parameter.type === 'double' || parameter.type == 'Integer') {
+                    if (parameter.type === 'integer' || parameter.type === 'double') {
                         parameter.typescriptType = 'number';
-                    } else if (parameter.type == 'String') {
-                        parameter.typescriptType = 'string';
-                    } else if (parameter.type == 'Boolean') {
-                        parameter.typescriptType = 'boolean';
                     } else if (parameter.type === 'object') {
                         parameter.typescriptType = 'any';
                     } else if (parameter.type === 'array') {
-                        parameter.typescriptType = that.camelCase(parameter.items['type']) +'[]';
+                        if (parameter.items['type'] === 'integer' || parameter.items['type'] === 'double') {
+                            parameter.typescriptType = 'number[]';
+                        } else {
+                            parameter.typescriptType = that.camelCase(parameter.items['type']) +'[]';
+                        }
                         parameter.isArray = true;
                     } else {
                         parameter.typescriptType = that.camelCase(parameter.type);
