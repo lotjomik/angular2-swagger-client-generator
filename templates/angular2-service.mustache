@@ -27,9 +27,9 @@ export enum {{name}} {
 @Injectable()
 export class ApiClientService {
 
-  private domain = '{{&domain}}';
+  protected domain = '{{&domain}}';
 
-  constructor(private http: HttpClient, @Optional() @Inject('domain') domain: string ) {
+  constructor(protected http: HttpClient, @Optional() @Inject('domain') domain: string ) {
     if (domain) {
       this.domain = domain;
     }
@@ -109,7 +109,7 @@ export class ApiClientService {
   }
 
 {{/methods}}
-  private sendRequest<T>(method: string, uri: string, headers: HttpHeaders, params: HttpParams, body: any): Observable<HttpResponse<T>> {
+  protected sendRequest<T>(method: string, uri: string, headers: HttpHeaders, params: HttpParams, body: any): Observable<HttpResponse<T>> {
     if (method === 'get') {
       return this.http.get<T>(this.domain + uri, { headers: headers.set('Accept', 'application/json'), params: params, observe: 'response' });
     } else if (method === 'options') {
