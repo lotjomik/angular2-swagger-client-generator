@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+  - "stable"
+
+cache:
+  directories:
+    - "node_modules"
+
+script: npm run build
+
+before_deploy:
+  -  tar -zcvf ../build-${TRAVIS_BUILD_NUMBER}.tar.gz -C . --exclude ./node_modules --exclude ./.git .
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: ${GITHUB_API_KEY}
+    file: ../build-${TRAVIS_BUILD_NUMBER}.tar.gz
+    skip_cleanup: true
+    on:
+      tags: true
