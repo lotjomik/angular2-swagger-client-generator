@@ -19,7 +19,6 @@ var Generator = (function () {
 
         this.LogMessage('Parsing Swagger JSON');
         this.swaggerParsed = JSON.parse(swaggerfilecontent);
-
         this.LogMessage('Reading Mustache templates');
 
         this.templates = {
@@ -30,7 +29,6 @@ var Generator = (function () {
 
         this.LogMessage('Creating Mustache viewModel');
         this.viewModel = this.createMustacheViewModel();
-
         this.initialized = true;
     };
 
@@ -54,7 +52,6 @@ var Generator = (function () {
         // generate main API client class
         this.LogMessage('Rendering template for API');
         var result = this.renderLintAndBeautify(this.templates.class, this.viewModel, this.templates);
-
         var outfile = this._outputPath + '/' + 'index.ts';
         this.LogMessage('Creating output file', outfile);
         fs.writeFileSync(outfile, result, 'utf-8')
@@ -74,13 +71,10 @@ var Generator = (function () {
         }
 
         // generate API models
-
         _.forEach(this.viewModel.definitions, function (definition) {
             that.LogMessage('Rendering template for model', definition.name);
             var result = that.renderLintAndBeautify(that.templates.model, definition, that.templates);
-
             var outfile = outputdir + '/' + definition.name.toLowerCase() + '.model.ts';
-
             that.LogMessage('Creating output file', outfile);
             fs.writeFileSync(outfile, result, 'utf-8')
         });
@@ -99,9 +93,7 @@ var Generator = (function () {
 
         this.LogMessage('Rendering common models export');
         var result = this.renderLintAndBeautify(this.templates.models_export, this.viewModel, this.templates);
-
         var outfile = outputdir + '/models.ts';
-
         this.LogMessage('Creating output file', outfile);
         fs.writeFileSync(outfile, result, 'utf-8')
     };
@@ -299,7 +291,6 @@ var Generator = (function () {
                 hasEnums: false,
                 enums: [],
                 properties: [],
-                refs: [],
                 imports: []
             };
 
@@ -372,22 +363,21 @@ var Generator = (function () {
                 }
 
                 if (property.isRef) {
-                    definition.refs.push(property);
-
-                    // Don't duplicate import statements
-                    var addImport = true;
-                    for (var i = 0; i < definition.imports.length; i++) {
-                        if (definition.imports[i] === property.type) {
-                            addImport = false;
+                    // Don't import hierarchy of same type
+                    if (defName !== property.type) {
+                       // Don't duplicate import statements
+                        var addImport = true;
+                        for (var i = 0; i < definition.imports.length; i++) {
+                            if (definition.imports[i] === property.type) {
+                                addImport = false;
+                            }
+                        }
+                        if (addImport) {
+                            definition.imports.push(property.type);
                         }
                     }
-                    if (addImport) {
-                        definition.imports.push(property.type);
-                    }
                 }
-                else {
-                    definition.properties.push(property);
-                }
+                definition.properties.push(property);
             });
 
             _.forEach(defin.allOf, function (oneOf, ofVal) {
@@ -453,8 +443,6 @@ var Generator = (function () {
                     }
 
                     if (property.isRef) {
-                        definition.refs.push(property);
-
                         // Don't duplicate import statements
                         var addImport = true;
                         for (var i = 0; i < definition.imports.length; i++) {
@@ -466,9 +454,7 @@ var Generator = (function () {
                             definition.imports.push(property.type);
                         }
                     }
-                    else {
-                        definition.properties.push(property);
-                    }
+                    definition.properties.push(property);
                 });
             });
 
@@ -477,17 +463,24 @@ var Generator = (function () {
 
         if (data.definitions.length > 0) {
             data.definitions[data.definitions.length - 1].isLast = true;
+            for (var i = 0; i < data.definitions.length; i++) {
+                data.definitions[i].imports.sort();
+                data.definitions[i].properties.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+            }
+            data.definitions.sort((a,b) => (a.defName > b.defName) ? 1 : ((b.defName > a.defName) ? -1 : 0));
         }
+
+        data.methods.sort((a,b) => (a.methodName > b.methodName) ? 1 : ((b.methodName > a.methodName) ? -1 : 0)); 
 
         return data;
     };
 
-    Generator.prototype.getRefType = function (refString) {
+    Generator.prototype.getRefType = function(refString) {
         var segments = refString.split('/');
         return segments.length === 3 ? segments[2] : segments[0];
     };
 
-    Generator.prototype.getPathToMethodName = function (m, path) {
+    Generator.prototype.getPathToMethodName = function(m, path) {
         if (path === '/' || path === '') {
             return m;
         }
@@ -501,7 +494,7 @@ var Generator = (function () {
 
         var segments = cleanPath.split('/').slice(1);
 
-        segments = _.transform(segments, function (result, segment) {
+        segments = _.transform(segments, function(result, segment) {
             if (segment[0] === '{' && segment[segment.length - 1] === '}') {
                 segment = 'by' + segment[1].toUpperCase() + segment.substring(2, segment.length - 1);
             }
@@ -514,7 +507,7 @@ var Generator = (function () {
         return m.toLowerCase() + result[0].toUpperCase() + result.substring(1);
     };
 
-    Generator.prototype.camelCase = function (text) {
+    Generator.prototype.camelCase = function(text) {
         if (!text) {
             return text;
         }
@@ -539,7 +532,7 @@ var Generator = (function () {
         return tokens.join('');
     };
 
-    Generator.prototype.LogMessage = function (text, param) {
+    Generator.prototype.LogMessage = function(text, param) {
         if (this.Debug) {
             console.log(text, param || '');
         }

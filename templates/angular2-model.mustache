@@ -19,12 +19,4 @@ export interface {{&name}} {
   {{name}}: {{typescriptType}};
   {{/isArray}}
 {{/properties}}
-{{#refs}}
-  {{#isArray}}
-  {{name}}: {{typescriptType}}[];
-  {{/isArray}}
-  {{^isArray}}
-  {{name}}: {{typescriptType}};
-  {{/isArray}}
-{{/refs}}
 }
